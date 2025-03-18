@@ -7,36 +7,49 @@ namespace ToDoApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class AuthController : ControllerBase
     {
         private static List<User> _users = new List<User>();
 
-        // GET: api/User
-        [HttpGet]
-        public ActionResult<IEnumerable<User>> GetUsers()
+        // POST: api/Auth/Register
+        [HttpPost("Register")]
+        public ActionResult<User> Register([FromBody] User user)
         {
-            return Ok(_users);
+            // Check if the email is already registered
+            if (_users.Any(u => u.Email == user.Email))
+            {
+                return BadRequest("Email is already registered.");
+            }
+
+            // Assign a unique UserID
+            user.UserID = _users.Any() ? _users.Max(u => u.UserID) + 1 : 1;
+
+            // Add the user to the list
+            _users.Add(user);
+
+            // Return the created user
+            return CreatedAtAction(nameof(Register), new { id = user.UserID }, user);
         }
 
-        // GET: api/User/5
-        [HttpGet("{id}")]
-        public ActionResult<User> GetUser(int id)
+        // POST: api/Auth/Login
+        [HttpPost("Login")]
+        public ActionResult<User> Login([FromBody] LoginRequest request)
         {
-            var user = _users.FirstOrDefault(u => u.UserID == id);
+            // Find the user by email and password
+            var user = _users.FirstOrDefault(u => u.Email == request.Email && u.Password == request.Password);
             if (user == null)
             {
-                return NotFound();
+                return Unauthorized("Invalid email or password.");
             }
+
+            // Return the user (in a real app, you would return a JWT token)
             return Ok(user);
         }
+    }
 
-        // POST: api/User
-        [HttpPost]
-        public ActionResult<User> CreateUser([FromBody] User user)
-        {
-            user.UserID = _users.Any() ? _users.Max(u => u.UserID) + 1 : 1;
-            _users.Add(user);
-            return CreatedAtAction(nameof(GetUser), new { id = user.UserID }, user);
-        }
+    public class LoginRequest
+    {
+        public required string Email { get; set; }
+        public required string Password { get; set; }
     }
 }

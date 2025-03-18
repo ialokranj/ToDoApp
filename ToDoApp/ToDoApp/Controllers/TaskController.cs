@@ -23,27 +23,22 @@ namespace ToDoApp.Controllers
             return Ok(tasks);
         }
 
-        // GET: api/Task/5
-        [HttpGet("{id}")]
-        public ActionResult<TaskItem> GetTask(int id)
-        {
-            var task = _tasks.FirstOrDefault(t => t.TaskID == id);
-            if (task == null)
-            {
-                return NotFound();
-            }
-            return Ok(task);
-        }
-
         // POST: api/Task
         [HttpPost]
         public ActionResult<TaskItem> CreateTask([FromBody] TaskItem task)
         {
+            // Assign a unique TaskID
             task.TaskID = _tasks.Any() ? _tasks.Max(t => t.TaskID) + 1 : 1;
+
+            // Set timestamps
             task.TaskCreatedAt = DateTime.UtcNow;
             task.TaskUpdatedAt = DateTime.UtcNow;
+
+            // Add the task to the list
             _tasks.Add(task);
-            return CreatedAtAction(nameof(GetTask), new { id = task.TaskID }, task);
+
+            // Return the created task
+            return CreatedAtAction(nameof(GetTasksByUser), new { userId = task.UserID }, task);
         }
 
         // PUT: api/Task/5
@@ -53,9 +48,10 @@ namespace ToDoApp.Controllers
             var task = _tasks.FirstOrDefault(t => t.TaskID == id);
             if (task == null)
             {
-                return NotFound();
+                return NotFound("Task not found.");
             }
 
+            // Update task properties
             task.TaskTitle = updatedTask.TaskTitle;
             task.TaskDescription = updatedTask.TaskDescription;
             task.TaskStatus = updatedTask.TaskStatus;
@@ -72,10 +68,12 @@ namespace ToDoApp.Controllers
             var task = _tasks.FirstOrDefault(t => t.TaskID == id);
             if (task == null)
             {
-                return NotFound();
+                return NotFound("Task not found.");
             }
 
+            // Remove the task
             _tasks.Remove(task);
+
             return NoContent();
         }
     }
