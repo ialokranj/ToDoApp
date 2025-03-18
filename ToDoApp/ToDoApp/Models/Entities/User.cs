@@ -5,14 +5,13 @@ namespace ToDoApp.Models.Entities
     public class User
     {
         [Key]
-        public int Id { get; set; }
+        public int UserID { get; set; }
 
-        [Required]
-        public string Username { get; set; }
+        public required string Username { get; set; }
+        public required string Email { get; set; }
 
-        [Required]
-        public string Password { get; set; }
+        public required string Password { get; set; }
 
-        public ICollection<TaskItem> TaskItems { get; set; }
+        public required string Role { get; set; }
     }
 }

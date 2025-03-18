@@ -1,32 +1,31 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using ToDoApp.Models.Entities;
 
 namespace ToDoApp.Models.Entities
 {
     public class TaskItem
     {
         [Key]
-        public int Id { get; set; }
+        public int TaskID { get; set; }
 
         [Required]
-        public string Title { get; set; }
+        public required string TaskTitle { get; set; }
 
-        public string Description { get; set; }
+        public required string TaskDescription { get; set; }
 
         [Required]
-        public string Status { get; set; } // "Pending" or "Completed"
+        public required string TaskStatus { get; set; } // "Pending" or "Completed"
 
-        public DateTime DueDate { get; set; }
+        public DateTime TaskDueDate { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime TaskCreatedAt { get; set; } = DateTime.UtcNow;
 
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime TaskUpdatedAt { get; set; } = DateTime.UtcNow;
+        public int UserID { get; set; }
 
-        [ForeignKey("User")]
-        public int UserId { get; set; }
+        [ForeignKey("UserID")]
+        public required User User { get; set; }
 
-        public User User { get; set; }
     }
 }

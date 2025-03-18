@@ -13,9 +13,10 @@ namespace ToDoApp.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<TaskItem>()
-                .HasOne(t => t.User)
-                .WithMany(u => u.TaskItems)
-                .HasForeignKey(t => t.UserId);
+                .HasOne(t => t.User)                 // TaskItem has one User
+                .WithMany()          // User has many TaskItems
+                .HasForeignKey(t => t.UserID)        // Foreign key is UserID
+                .OnDelete(DeleteBehavior.Cascade);    // Cascade delete when User is deleted
         }
     }
 }
