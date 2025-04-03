@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ToDoApp.Models.Entities;
-using System.Collections.Generic;
+using ToDoApp.Data;
 using System.Linq;
 
 namespace ToDoApp.Controllers
@@ -9,40 +9,36 @@ namespace ToDoApp.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private static List<User> _users = new List<User>();
+        private readonly AppDbContext _context;
 
-        // POST: api/Auth/Register
-        [HttpPost("Register")]
-        public ActionResult<User> Register([FromBody] User user)
+        public AuthController(AppDbContext context)
         {
-            // Check if the email is already registered
-            if (_users.Any(u => u.Email == user.Email))
+            _context = context;
+        }
+
+        [HttpPost("Register")]
+        public IActionResult Register([FromBody] User user)
+        {
+            if (_context.Users.Any(u => u.Email == user.Email))
             {
                 return BadRequest("Email is already registered.");
             }
 
-            // Assign a unique UserID
-            user.UserID = _users.Any() ? _users.Max(u => u.UserID) + 1 : 1;
+            _context.Users.Add(user);
+            _context.SaveChanges();
 
-            // Add the user to the list
-            _users.Add(user);
-
-            // Return the created user
             return CreatedAtAction(nameof(Register), new { id = user.UserID }, user);
         }
 
-        // POST: api/Auth/Login
         [HttpPost("Login")]
-        public ActionResult<User> Login([FromBody] LoginRequest request)
+        public IActionResult Login([FromBody] LoginRequest request)
         {
-            // Find the user by email and password
-            var user = _users.FirstOrDefault(u => u.Email == request.Email && u.Password == request.Password);
+            var user = _context.Users.FirstOrDefault(u => u.Email == request.Email && u.Password == request.Password);
             if (user == null)
             {
                 return Unauthorized("Invalid email or password.");
             }
 
-            // Return the user (in a real app, you would return a JWT token)
             return Ok(user);
         }
     }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ToDoApp.Models.Entities;
-using System.Collections.Generic;
+using ToDoApp.Data;
 using System.Linq;
 
 namespace ToDoApp.Controllers
@@ -9,70 +9,66 @@ namespace ToDoApp.Controllers
     [ApiController]
     public class TaskController : ControllerBase
     {
-        private static List<TaskItem> _tasks = new List<TaskItem>();
+        private readonly AppDbContext _context;
 
-        // GET: api/Task/ByUser/5
-        [HttpGet("ByUser/{userId}")]
-        public ActionResult<IEnumerable<TaskItem>> GetTasksByUser(int userId)
+        public TaskController(AppDbContext context)
         {
-            var tasks = _tasks.Where(t => t.UserID == userId).ToList();
+            _context = context;
+        }
+
+        [HttpGet("ByUser/{userId}")]
+        public IActionResult GetTasksByUser(int userId)
+        {
+            var tasks = _context.TaskItems.Where(t => t.UserID == userId).ToList();
+
             if (!tasks.Any())
             {
                 return NotFound("No tasks found for the specified user.");
             }
+
             return Ok(tasks);
         }
 
-        // POST: api/Task
         [HttpPost]
-        public ActionResult<TaskItem> CreateTask([FromBody] TaskItem task)
+        public IActionResult CreateTask([FromBody] TaskItem task)
         {
-            // Assign a unique TaskID
-            task.TaskID = _tasks.Any() ? _tasks.Max(t => t.TaskID) + 1 : 1;
+            _context.TaskItems.Add(task);
+            _context.SaveChanges();
 
-            // Set timestamps
-            task.TaskCreatedAt = DateTime.UtcNow;
-            task.TaskUpdatedAt = DateTime.UtcNow;
-
-            // Add the task to the list
-            _tasks.Add(task);
-
-            // Return the created task
             return CreatedAtAction(nameof(GetTasksByUser), new { userId = task.UserID }, task);
         }
 
-        // PUT: api/Task/5
         [HttpPut("{id}")]
-        public ActionResult UpdateTask(int id, [FromBody] TaskItem updatedTask)
+        public IActionResult UpdateTask(int id, [FromBody] TaskItem updatedTask)
         {
-            var task = _tasks.FirstOrDefault(t => t.TaskID == id);
+            var task = _context.TaskItems.FirstOrDefault(t => t.TaskID == id);
             if (task == null)
             {
                 return NotFound("Task not found.");
             }
 
-            // Update task properties
             task.TaskTitle = updatedTask.TaskTitle;
             task.TaskDescription = updatedTask.TaskDescription;
             task.TaskStatus = updatedTask.TaskStatus;
             task.TaskDueDate = updatedTask.TaskDueDate;
             task.TaskUpdatedAt = DateTime.UtcNow;
 
+            _context.SaveChanges();
+
             return NoContent();
         }
 
-        // DELETE: api/Task/5
         [HttpDelete("{id}")]
-        public ActionResult DeleteTask(int id)
+        public IActionResult DeleteTask(int id)
         {
-            var task = _tasks.FirstOrDefault(t => t.TaskID == id);
+            var task = _context.TaskItems.FirstOrDefault(t => t.TaskID == id);
             if (task == null)
             {
                 return NotFound("Task not found.");
             }
 
-            // Remove the task
-            _tasks.Remove(task);
+            _context.TaskItems.Remove(task);
+            _context.SaveChanges();
 
             return NoContent();
         }
